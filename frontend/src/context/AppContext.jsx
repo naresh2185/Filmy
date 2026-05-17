@@ -6,7 +6,7 @@ export const useApp = () => useContext(AppContext);
 
 export const AppProvider = ({ children }) => {
   const [city, setCity] = useState(() => localStorage.getItem('bms_city') || 'Mumbai');
-  const [user, setUser] = useState(() => {
+  const [user, setUserState] = useState(() => {
     const u = localStorage.getItem('bms_user');
     return u ? JSON.parse(u) : null;
   });
@@ -27,7 +27,15 @@ export const AppProvider = ({ children }) => {
     else sessionStorage.removeItem('bms_booking');
   }, [booking]);
 
-  const logout = () => setUser(null);
+  const setUser = (u, token) => {
+    setUserState(u);
+    if (token) localStorage.setItem('bms_token', token);
+  };
+
+  const logout = () => {
+    setUserState(null);
+    localStorage.removeItem('bms_token');
+  };
 
   return (
     <AppContext.Provider value={{

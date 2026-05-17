@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Film, Tv, Music, Drama, Trophy, Sparkles } from 'lucide-react';
 import { getNowPlaying, getUpcoming, getPopular, IMG } from '../lib/tmdb';
-import { EVENTS, PLAYS, SPORTS, PROMO_BANNERS } from '../mock';
+import { PROMO_BANNERS } from '../mock';
+import { catalogApi } from '../lib/api';
 import { MovieCard, EventCard, SkeletonCard, ScrollRow } from '../components/MovieCard';
 const HeroCarousel = () => {
   const [idx, setIdx] = useState(0);
@@ -91,6 +92,9 @@ const CategoryStrip = () => {
 const Home = () => {
   const [nowPlaying, setNowPlaying] = useState([]);
   const [upcoming, setUpcoming] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [plays, setPlays] = useState([]);
+  const [sports, setSports] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -102,6 +106,9 @@ const Home = () => {
         setLoading(false);
       })
       .catch(() => setLoading(false));
+    catalogApi.events().then(setEvents).catch(() => {});
+    catalogApi.plays().then(setPlays).catch(() => {});
+    catalogApi.sports().then(setSports).catch(() => {});
   }, []);
 
   const skel = Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />);
@@ -129,7 +136,7 @@ const Home = () => {
       </section>
 
       <ScrollRow title="The Best Of Live Events" viewAll={() => navigate('/events')}>
-        {EVENTS.map(e => <EventCard key={e.id} item={e} />)}
+        {events.map(e => <EventCard key={e.id} item={e} />)}
       </ScrollRow>
 
       <ScrollRow title="Premieres" viewAll={() => navigate('/movies')}>
@@ -137,11 +144,11 @@ const Home = () => {
       </ScrollRow>
 
       <ScrollRow title="Plays In Your City" viewAll={() => navigate('/plays')}>
-        {PLAYS.map(p => <EventCard key={p.id} item={p} />)}
+        {plays.map(p => <EventCard key={p.id} item={p} />)}
       </ScrollRow>
 
       <ScrollRow title="Sports Events" viewAll={() => navigate('/sports')}>
-        {SPORTS.map(s => <EventCard key={s.id} item={s} />)}
+        {sports.map(s => <EventCard key={s.id} item={s} />)}
       </ScrollRow>
     </div>
   );

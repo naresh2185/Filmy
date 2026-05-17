@@ -1,10 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { SEAT_CATEGORIES, BOOKED_SEATS, CINEMAS } from '../mock';
 import { Button } from '../components/ui/button';
 import { useApp } from '../context/AppContext';
 import { toast } from '../hooks/use-toast';
 import { ArrowLeft } from 'lucide-react';
+import { bookingApi } from '../lib/api';
 
 const SeatSelection = () => {
   const { id } = useParams();
@@ -16,18 +17,28 @@ const SeatSelection = () => {
   const navigate = useNavigate();
 
   const [selected, setSelected] = useState([]);
+  const [serverBooked, setServerBooked] = useState([]);
   const cinema = CINEMAS.find(c => c.id === cinemaId) || CINEMAS[0];
 
-  const toggleSeat = (id, price) => {
-    if (BOOKED_SEATS.includes(id)) return;
+  useEffect(() => {
+    if (!cinemaId || !time || !dateStr) return;
+    bookingApi.bookedSeats(id, cinemaId, dateStr, time)
+      .then(d => setServerBooked(d.booked_seats || []))
+      .catch(() => {});
+  }, [id, cinemaId, time, dateStr]);
+
+  const allBooked = useMemo(() => Array.from(new Set([...BOOKED_SEATS, ...serverBooked])), [serverBooked]);
+
+  const toggleSeat = (seatId, price) => {
+    if (allBooked.includes(seatId)) return;
     setSelected(prev => {
-      const found = prev.find(s => s.id === id);
-      if (found) return prev.filter(s => s.id !== id);
+      const found = prev.find(s => s.id === seatId);
+      if (found) return prev.filter(s => s.id !== seatId);
       if (prev.length >= 10) {
         toast({ title: 'Limit reached', description: 'You can select max 10 seats' });
         return prev;
       }
-      return [...prev, { id, price }];
+      return [...prev, { id: seatId, price }];
     });
   };
 
@@ -46,6 +57,7 @@ const SeatSelection = () => {
     }
     setBooking({
       movieId: id,
+      cinemaId: cinema.id,
       cinema: cinema.name,
       time,
       date: dateStr,
@@ -86,7 +98,7 @@ const SeatSelection = () => {
                   <div className="flex-1 flex justify-center gap-1">
                     {Array.from({ length: cat.cols }).map((_, i) => {
                       const seatId = `${row}${i + 1}`;
-                      const isBooked = BOOKED_SEATS.includes(seatId);
+                      const isBooked = allBooked.includes(seatId);
                       const isSelected = selected.some(s => s.id === seatId);
                       const gapAfter = i === Math.floor(cat.cols / 2) - 1;
                       return (

@@ -4,12 +4,14 @@ import { Button } from './ui/button';
 import { useApp } from '../context/AppContext';
 import { Phone, ArrowLeft } from 'lucide-react';
 import { toast } from '../hooks/use-toast';
+import { authApi } from '../lib/api';
 
 const AuthModal = () => {
   const { authOpen, setAuthOpen, setUser } = useApp();
   const [step, setStep] = useState('phone'); // phone | otp
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [loading, setLoading] = useState(false);
 
   const reset = () => { setStep('phone'); setPhone(''); setOtp(['', '', '', '', '', '']); };
 
@@ -18,25 +20,39 @@ const AuthModal = () => {
     setAuthOpen(open);
   };
 
-  const sendOtp = () => {
+  const sendOtp = async () => {
     if (phone.length !== 10) {
       toast({ title: 'Invalid number', description: 'Please enter a valid 10-digit mobile number' });
       return;
     }
-    setStep('otp');
-    toast({ title: 'OTP sent', description: `Use any 6 digits to continue (demo)` });
+    setLoading(true);
+    try {
+      await authApi.sendOtp(phone);
+      setStep('otp');
+      toast({ title: 'OTP sent', description: 'Use any 6 digits to continue (demo)' });
+    } catch (e) {
+      toast({ title: 'Failed', description: e.response?.data?.detail || 'Unable to send OTP' });
+    }
+    setLoading(false);
   };
 
-  const verifyOtp = () => {
+  const verifyOtp = async () => {
     const code = otp.join('');
     if (code.length !== 6) {
       toast({ title: 'Invalid OTP', description: 'Please enter all 6 digits' });
       return;
     }
-    setUser({ phone: `+91 ${phone}`, name: `User${phone.slice(-4)}` });
-    toast({ title: 'Welcome!', description: 'You are now signed in' });
-    reset();
-    setAuthOpen(false);
+    setLoading(true);
+    try {
+      const { data } = await authApi.verifyOtp(phone, code);
+      setUser(data.user, data.token);
+      toast({ title: 'Welcome!', description: 'You are now signed in' });
+      reset();
+      setAuthOpen(false);
+    } catch (e) {
+      toast({ title: 'Failed', description: e.response?.data?.detail || 'Verification failed' });
+    }
+    setLoading(false);
   };
 
   const onOtpChange = (idx, val) => {
@@ -77,7 +93,7 @@ const AuthModal = () => {
                     className="flex-1 px-3 py-2 text-sm focus:outline-none"
                   />
                 </div>
-                <Button onClick={sendOtp} className="w-full text-white" style={{ background: '#f84464' }}>Continue</Button>
+                <Button onClick={sendOtp} disabled={loading} className="w-full text-white" style={{ background: '#f84464' }}>{loading ? 'Sending…' : 'Continue'}</Button>
                 <p className="text-[10px] text-gray-400 mt-4 text-center">By proceeding, you agree to our Terms & Conditions and Privacy Policy</p>
               </>
             ) : (
@@ -100,7 +116,7 @@ const AuthModal = () => {
                     />
                   ))}
                 </div>
-                <Button onClick={verifyOtp} className="w-full text-white" style={{ background: '#f84464' }}>Verify</Button>
+                <Button onClick={verifyOtp} disabled={loading} className="w-full text-white" style={{ background: '#f84464' }}>{loading ? 'Verifying…' : 'Verify'}</Button>
                 <p className="text-xs text-gray-500 mt-3 text-center">Didn't receive? <span className="text-red-500 cursor-pointer">Resend OTP</span></p>
               </>
             )}

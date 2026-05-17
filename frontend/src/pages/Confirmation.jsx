@@ -24,7 +24,7 @@ const Confirmation = () => {
     );
   }
 
-  const bookingId = `FLM${Date.now().toString().slice(-8)}`;
+  const bookingId = booking.bookingRef || `FLM${Date.now().toString().slice(-8)}`;
 
   const goHome = () => {
     setBooking(null);

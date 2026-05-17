@@ -2,12 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { getNowPlaying, getUpcoming, getPopular, searchMovies } from '../lib/tmdb';
 import { MovieCard, EventCard, SkeletonCard } from '../components/MovieCard';
-import { EVENTS, PLAYS, SPORTS, LANGUAGES, GENRES } from '../mock';
+import { LANGUAGES, GENRES } from '../mock';
+import { catalogApi } from '../lib/api';
 
 const ListingPage = ({ type }) => {
   const [params] = useSearchParams();
   const q = params.get('q');
   const [movies, setMovies] = useState([]);
+  const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterLang, setFilterLang] = useState(null);
   const [filterGenre, setFilterGenre] = useState(null);
@@ -21,17 +23,21 @@ const ListingPage = ({ type }) => {
   };
 
   useEffect(() => {
-    if (type !== 'movies') { setLoading(false); return; }
     setLoading(true);
-    const loader = q ? searchMovies(q) : Promise.all([getNowPlaying(), getUpcoming(), getPopular()]).then(([a, b, c]) => {
-      const map = new Map();
-      [...a, ...b, ...c].forEach(m => map.set(m.id, m));
-      return Array.from(map.values());
-    });
-    loader.then(data => { setMovies(data); setLoading(false); }).catch(() => setLoading(false));
+    if (type === 'movies') {
+      const loader = q ? searchMovies(q) : Promise.all([getNowPlaying(), getUpcoming(), getPopular()]).then(([a, b, c]) => {
+        const map = new Map();
+        [...a, ...b, ...c].forEach(m => map.set(m.id, m));
+        return Array.from(map.values());
+      });
+      loader.then(data => { setMovies(data); setLoading(false); }).catch(() => setLoading(false));
+    } else {
+      const fetcher = type === 'events' ? catalogApi.events : type === 'plays' ? catalogApi.plays : catalogApi.sports;
+      fetcher().then(d => { setItems(d); setLoading(false); }).catch(() => setLoading(false));
+    }
   }, [type, q]);
 
-  const items = type === 'events' ? EVENTS : type === 'plays' ? PLAYS : type === 'sports' ? SPORTS : [];
+  // items is from state above
 
   return (
     <div className="bg-white min-h-screen">

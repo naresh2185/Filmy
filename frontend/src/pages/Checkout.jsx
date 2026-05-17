@@ -1,16 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { Button } from '../components/ui/button';
 import { CreditCard, Wallet, Smartphone, ShieldCheck } from 'lucide-react';
 import { toast } from '../hooks/use-toast';
+import { bookingApi } from '../lib/api';
+import { getMovieDetails } from '../lib/tmdb';
 
 const Checkout = () => {
   const { id } = useParams();
-  const { booking, user } = useApp();
+  const { booking, setBooking } = useApp();
   const navigate = useNavigate();
   const [method, setMethod] = useState('card');
   const [processing, setProcessing] = useState(false);
+  const [movieMeta, setMovieMeta] = useState(null);
+
+  useEffect(() => {
+    if (id) getMovieDetails(id).then(setMovieMeta).catch(() => {});
+  }, [id]);
 
   if (!booking) {
     return (
@@ -21,12 +28,35 @@ const Checkout = () => {
     );
   }
 
-  const pay = () => {
+  const pay = async () => {
     setProcessing(true);
-    setTimeout(() => {
-      setProcessing(false);
+    try {
+      const { booking: created } = await bookingApi.create({
+        movie_id: String(id),
+        movie_title: movieMeta?.title || 'Movie',
+        poster_path: movieMeta?.poster_path || null,
+        cinema_id: booking.cinemaId,
+        cinema_name: booking.cinema,
+        show_date: booking.date,
+        show_time: booking.time,
+        seats: booking.seats,
+        subtotal: booking.subtotal,
+        fee: booking.fee,
+        total: booking.total
+      });
+      setBooking({ ...booking, bookingRef: created.booking_ref, id: created.id });
       navigate(`/booking/${id}/confirmation`);
-    }, 1500);
+    } catch (e) {
+      const detail = e.response?.data?.detail;
+      if (e.response?.status === 409) {
+        const conflicts = detail?.conflict_seats || [];
+        toast({ title: 'Seats unavailable', description: `These seats were just booked: ${conflicts.join(', ')}. Please pick others.` });
+        navigate(-1);
+      } else {
+        toast({ title: 'Payment failed', description: typeof detail === 'string' ? detail : 'Please try again' });
+      }
+    }
+    setProcessing(false);
   };
 
   const methods = [
