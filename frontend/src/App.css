@@ -1,0 +1,111 @@
+.App {
+  min-height: 100vh;
+  background: #f5f5fa;
+}
+
+/* BMS brand colors */
+:root {
+  --bms-red: #f84464;
+  --bms-red-dark: #d63854;
+  --bms-dark: #1a1a1a;
+  --bms-gray-bg: #f5f5fa;
+  --bms-text: #333;
+  --bms-text-light: #666;
+}
+
+body {
+  font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  color: var(--bms-text);
+  background: var(--bms-gray-bg);
+}
+
+/* Hide scrollbar but keep scroll */
+.scroll-row::-webkit-scrollbar { height: 6px; }
+.scroll-row::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 3px; }
+.scroll-row::-webkit-scrollbar-track { background: transparent; }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
+
+/* Movie card hover */
+.movie-card { transition: transform 0.25s ease, box-shadow 0.25s ease; }
+.movie-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
+
+/* Seat styles */
+.seat {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px 4px 2px 2px;
+  border: 1px solid #c5c5d2;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  cursor: pointer;
+  background: white;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.seat:hover:not(.booked):not(.selected) { border-color: #1ea83c; color: #1ea83c; }
+.seat.selected { background: #1ea83c; border-color: #1ea83c; color: white; }
+.seat.booked { background: #d8d8df; border-color: #d8d8df; color: #999; cursor: not-allowed; }
+.seat.gap { background: transparent; border: none; cursor: default; }
+
+/* Hero carousel arrow */
+.hero-arrow {
+  background: rgba(255,255,255,0.9);
+  border-radius: 9999px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  transition: background 0.2s ease;
+}
+.hero-arrow:hover { background: white; }
+
+/* Screen curve */
+.screen-curve {
+  background: linear-gradient(to bottom, #c5c5d2 0%, transparent 70%);
+  height: 30px;
+  border-radius: 50% / 100% 100% 0 0;
+  transform: scaleY(-1);
+  width: 80%;
+  margin: 0 auto;
+}
+
+/* Skeleton shimmer */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, #e8e8ef 0%, #f4f4fa 50%, #e8e8ef 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Pill chip */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  border: 1px solid #d8d8df;
+  color: #333;
+  background: white;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.chip:hover { border-color: var(--bms-red); color: var(--bms-red); }
+.chip.active { background: var(--bms-red); border-color: var(--bms-red); color: white; }
+
+/* Section heading */
+.section-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+}
