@@ -106,7 +106,7 @@ const AuthModal = () => {
                 <div className="flex gap-2 mb-5">
                   {otp.map((d, i) => (
                     <input
-                      key={i}
+                      key={`otp-slot-${i}`}
                       id={`otp-${i}`}
                       type="text"
                       maxLength={1}

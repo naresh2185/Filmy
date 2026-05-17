@@ -55,8 +55,8 @@ const HeroCarousel = () => {
           <ChevronRight className="w-5 h-5 text-gray-800" />
         </button>
         <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
-          {banners.map((_, i) => (
-            <button key={i} onClick={() => setIdx(i)} className="w-2 h-2 rounded-full" style={{ background: i === idx ? 'white' : 'rgba(255,255,255,0.4)' }} />
+          {banners.map((b, i) => (
+            <button key={b.id} onClick={() => setIdx(i)} className="w-2 h-2 rounded-full" style={{ background: i === idx ? 'white' : 'rgba(255,255,255,0.4)' }} />
           ))}
         </div>
       </div>
@@ -111,7 +111,7 @@ const Home = () => {
     catalogApi.sports().then(setSports).catch(() => {});
   }, []);
 
-  const skel = Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />);
+  const skel = Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={`skel-${i}`} />);
 
   return (
     <div className="pb-10">

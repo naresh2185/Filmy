@@ -149,6 +149,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ ALL BOOKING TESTS PASSED (7/7). Tested: GET /shows/booked-seats returns empty list initially, POST /bookings with valid data creates booking with booking_ref starting with 'FLM' and UUID format ID, POST /bookings without auth returns 401, POST /bookings with empty seats returns 400, POST /bookings to same show/seats returns 409 with conflict_seats list, GET /shows/booked-seats after booking correctly shows booked seats, GET /bookings/me returns user's bookings. Atomic seat locking with $addToSet working perfectly, conflict detection working correctly."
+      - working: true
+        agent: "testing"
+        comment: "✅ REGRESSION TEST PASSED (6/6) after refactoring create_booking into 4 helper functions (_build_show_key, _check_seat_conflict, _reserve_seats, _build_booking_doc). Verified: auth with phone 9988776655/otp 111111 → 200 with token; POST /bookings with movie_id=999, cinema_id=c1, seats X1,X2 → 200 with booking_ref starting FLM, UUID id; duplicate booking → 409 with conflict_seats=['X1','X2']; partial conflict (X1,X3) → 409 with conflict_seats=['X1'] only; empty seats → 400; GET /shows/booked-seats correctly returns ['X1','X2']. All helper functions working correctly, no regressions detected."
 
   - task: "Auth middleware — Bearer JWT validation"
     implemented: true
@@ -194,3 +197,5 @@ agent_communication:
     message: "Backend implemented for Filmy. Mocked OTP (any 6 digits accepted), JWT auth, atomic seat locking via $addToSet with conflict detection. Seed data auto-loads on startup. Please test all backend endpoints — happy paths and edge cases (invalid OTP, missing token, seat conflict, auth-required endpoints)."
   - agent: "testing"
     message: "🎉 ALL BACKEND TESTS PASSED (20/20)! Comprehensive testing completed covering: Auth flow (send-otp, verify-otp, /auth/me with various token scenarios), Catalog endpoints (events, plays, sports, cinemas with city filter), Bookings flow (booked-seats lookup, booking creation with auth, conflict detection, empty seats validation). All validations working correctly: phone validation (10+ digits), OTP validation (6-digit numeric), JWT auth (proper 401 on missing/invalid tokens), atomic seat locking with $addToSet, conflict detection returning 409 with conflict_seats, booking_ref starting with 'FLM', UUID format booking IDs. Backend is production-ready. NOTE: OTP is MOCKED - any 6-digit numeric OTP is accepted for testing purposes."
+  - agent: "testing"
+    message: "✅ REGRESSION TEST COMPLETE (6/6 passed). Refactored create_booking endpoint verified working correctly. All 4 helper functions (_build_show_key, _check_seat_conflict, _reserve_seats, _build_booking_doc) functioning as expected. No regressions detected. API contract unchanged. Critical paths verified: auth flow, booking creation with UUID/FLM ref, full conflict detection, partial conflict detection (only conflicting seats returned), empty seats validation, booked seats lookup."

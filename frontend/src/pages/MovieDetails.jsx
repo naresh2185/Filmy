@@ -120,7 +120,7 @@ const MovieDetails = () => {
             <div className="flex gap-2 mb-6 overflow-x-auto no-scrollbar">
               {dates.map((d, i) => (
                 <button
-                  key={i}
+                  key={d.full.toISOString()}
                   onClick={() => setSelectedDate(i)}
                   className={`flex flex-col items-center justify-center min-w-[68px] py-2 px-3 rounded-md border ${selectedDate === i ? 'text-white border-transparent' : 'bg-white text-gray-700 border-gray-200'}`}
                   style={selectedDate === i ? { background: '#f84464' } : {}}

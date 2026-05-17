@@ -29,12 +29,12 @@ export const AppProvider = ({ children }) => {
 
   const setUser = (u, token) => {
     setUserState(u);
-    if (token) localStorage.setItem('bms_token', token);
+    if (token) sessionStorage.setItem('bms_token', token);
   };
 
   const logout = () => {
     setUserState(null);
-    localStorage.removeItem('bms_token');
+    sessionStorage.removeItem('bms_token');
   };
 
   return (

@@ -63,7 +63,7 @@ const ListingPage = ({ type }) => {
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
           {type === 'movies'
-            ? (loading ? Array.from({ length: 10 }).map((_, i) => <SkeletonCard key={i} />) : movies.map(m => <MovieCard key={m.id} movie={m} />))
+            ? (loading ? Array.from({ length: 10 }).map((_, i) => <SkeletonCard key={`skel-${i}`} />) : movies.map(m => <MovieCard key={m.id} movie={m} />))
             : items.map(it => <EventCard key={it.id} item={it} />)}
         </div>
 

@@ -169,43 +169,41 @@ async def get_booked_seats(movie_id: str, cinema_id: str, date: str, time: str):
     })
     return {"booked_seats": (doc or {}).get('booked_seats', [])}
 
-@api.post("/bookings")
-async def create_booking(req: BookingCreateReq, user=Depends(get_current_user)):
-    if not req.seats:
-        raise HTTPException(status_code=400, detail='No seats selected')
-
-    show_key = {
+def _build_show_key(req: BookingCreateReq) -> dict:
+    return {
         'movie_id': req.movie_id,
         'cinema_id': req.cinema_id,
         'show_date': req.show_date,
-        'show_time': req.show_time
+        'show_time': req.show_time,
     }
+
+
+async def _check_seat_conflict(show_key: dict, requested_seats: List[str]) -> List[str]:
     existing = await db.show_seats.find_one(show_key)
     booked_now = set((existing or {}).get('booked_seats', []))
-    conflict = [s for s in req.seats if s in booked_now]
-    if conflict:
-        raise HTTPException(status_code=409, detail={
-            'message': 'Seats already booked',
-            'conflict_seats': conflict
-        })
+    return [s for s in requested_seats if s in booked_now]
 
-    # Add seats atomically
+
+async def _reserve_seats(show_key: dict, seats: List[str]) -> None:
+    """Atomically add seats to the show document; raise 409 if race detected."""
     await db.show_seats.update_one(
         show_key,
-        {'$addToSet': {'booked_seats': {'$each': req.seats}}},
-        upsert=True
+        {'$addToSet': {'booked_seats': {'$each': seats}}},
+        upsert=True,
     )
-
-    # Re-check (in case of race)
     after = await db.show_seats.find_one(show_key)
     after_booked = set(after.get('booked_seats', []))
-    # Find seats added by us only: they must all still be present
-    if not set(req.seats).issubset(after_booked):
-        raise HTTPException(status_code=409, detail={'message': 'Seat lock failed', 'conflict_seats': req.seats})
+    if not set(seats).issubset(after_booked):
+        raise HTTPException(status_code=409, detail={
+            'message': 'Seat lock failed',
+            'conflict_seats': seats,
+        })
 
-    booking = {
+
+def _build_booking_doc(req: BookingCreateReq, user_id: str) -> dict:
+    return {
         'id': str(uuid.uuid4()),
-        'user_id': user['id'],
+        'user_id': user_id,
         'movie_id': req.movie_id,
         'movie_title': req.movie_title,
         'poster_path': req.poster_path,
@@ -219,8 +217,26 @@ async def create_booking(req: BookingCreateReq, user=Depends(get_current_user)):
         'total': req.total,
         'status': 'confirmed',
         'booking_ref': 'FLM' + str(int(datetime.utcnow().timestamp()))[-8:],
-        'created_at': datetime.utcnow().isoformat()
+        'created_at': datetime.utcnow().isoformat(),
     }
+
+
+@api.post("/bookings")
+async def create_booking(req: BookingCreateReq, user=Depends(get_current_user)):
+    if not req.seats:
+        raise HTTPException(status_code=400, detail='No seats selected')
+
+    show_key = _build_show_key(req)
+    conflict = await _check_seat_conflict(show_key, req.seats)
+    if conflict:
+        raise HTTPException(status_code=409, detail={
+            'message': 'Seats already booked',
+            'conflict_seats': conflict,
+        })
+
+    await _reserve_seats(show_key, req.seats)
+
+    booking = _build_booking_doc(req, user['id'])
     await db.bookings.insert_one(booking)
     return {"booking": BookingOut(**clean_doc(booking))}
 

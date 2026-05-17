@@ -6,7 +6,7 @@ export const API = `${BACKEND_URL}/api`;
 export const apiClient = axios.create({ baseURL: API });
 
 apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('bms_token');
+  const token = sessionStorage.getItem('bms_token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
